@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const db = require('./models');
+const { Op } = require('sequelize');
 
 const app = express();
 
@@ -13,6 +14,31 @@ app.get('/api/games', (req, res) => db.Game.findAll()
     console.log('There was an error querying games', JSON.stringify(err));
     return res.send(err);
   }));
+
+app.post('/api/games/search', (req, res) => {
+  const { name, platform } = req.body;
+
+  const whereClause = {};
+
+  // add platform to where clause if it is provided
+  if (platform && platform.trim() !== '') {
+    whereClause.platform = platform.trim().toLowerCase();
+  }
+
+  // add name to where clause if it is provided
+  if (name && name.trim() !== '') {
+    whereClause.name = { 
+      [Op.like]: `%${name.trim()}%`
+    };
+  }
+
+  return db.Game.findAll({ where: whereClause })
+    .then(games => res.send(games))
+    .catch((err) => {
+      console.log('There was an error searching games', JSON.stringify(err));
+      return res.status(400).send(err);
+    });
+});
 
 app.post('/api/games', (req, res) => {
   const { publisherId, name, platform, storeId, bundleId, appVersion, isPublished } = req.body;
