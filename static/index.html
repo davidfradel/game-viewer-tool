@@ -24,6 +24,9 @@
     <div class="box">
       <search-games title="Search Games" @search-games-db="searchGames" :search="search" />
     </div>
+    <div style="margin-top: 20px;">
+      <button class="button is-info" @click="populateGames">Populate Database</button>
+    </div>
   </section>
   <section class="section section-container" style="padding-top: 24px; padding-bottom: 5px;">
     <h2 class="title">Games</h2>
@@ -255,6 +258,20 @@
           .then((response) => {
             this.games = response.data
           })
+      },
+      populateGames() {
+        return axios.post(`${this.apiURL}/populate`)
+          .then((response) => {
+            alert(`Database populated! Created: ${response.data.created}, Skipped: ${response.data.skipped}`);
+            // Refresh the games list
+            return axios.get(this.apiURL)
+              .then((response) => {
+                this.games = response.data;
+              });
+          })
+          .catch((error) => {
+            alert('Error populating database: ' + (error.response?.data?.error || error.message));
+          });
       }
     },
     beforeMount () {
